@@ -1,59 +1,56 @@
-//import { useState } from 'react'
-//import reactLogo from './assets/react.svg'
-//import viteLogo from './assets/vite.svg'
-//import heroImg from './assets/hero.png'
-//import { useEffect } from 'react';
-import './App.css'
+import { useEffect, useState } from "react";
+import EmployeeForm from "./components/EmployeeForm";
+import EmployeeList from "./components/EmployeeList";
 
+const API = "http://localhost:8000/employees";
 
-function App() {
-  // const [count, setCount] = useState(0)
-  // const[data, setData] = useState(null);
+export default function App() {
+  const [employees, setEmployees] = useState([]);
+  const [editData, setEditData]   = useState(null);
 
-  // useEffect(() => {
-  //   fetch('http://localhost:8000')
-  //     .then(response => response.json())
-  //     .then(data => setData(data))
-  // }, []);
-  ``
+  const fetchAll = () =>
+    fetch(API).then((r) => r.json()).then(setEmployees);
+
+  useEffect(() => { fetchAll(); }, []);
+
+  const handleSubmit = async (data) => {
+    if (editData) {
+      await fetch(`${API}/${editData.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      setEditData(null);
+    } else {
+      await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+    }
+    fetchAll();
+  };
+
+  const handleDelete = async (id) => {
+    if (confirm("Delete this employee?")) {
+      await fetch(`${API}/${id}`, { method: "DELETE" });
+      fetchAll();
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div id="hero">
-          <h1>Employee Management System</h1>
-        </div>
-        <div id="datafield">
-          <label htmlFor="employeeId">Employee ID:</label>
-          <input type="text" id="employeeId" name="employeeId" />
-          
-          <label htmlFor="employeeName">Employee Name:</label>
-          <input type="text" id="employeeName" name="employeeName" />
-
-          <label htmlFor="employeeEmail">Employee Email:</label>
-          <input type="email" id="employeeEmail" name="employeeEmail" />
-
-          <label htmlFor="employeeDepartment">Employee Department:</label>
-          <input type="text" id="employeeDepartment" name="employeeDepartment" />
-
-          <button id="submitBtn">Submit</button>
-        </div>
-      </section>
-
-      <section>
-
-      </section>
-
-      <section id="footer">
-        <div id = "footer-content">
-          <p>IAM Pvt. Ltd.</p>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <div className="container">
+      <h1>Employee Management</h1>
+      <EmployeeForm
+        onSubmit={handleSubmit}
+        editData={editData}
+        onCancel={() => setEditData(null)}
+      />
+      <EmployeeList
+        employees={employees}
+        onEdit={setEditData}
+        onDelete={handleDelete}
+      />
+    </div>
+  );
 }
-
-export default App
